@@ -1,0 +1,24 @@
+FROM bagi-n100:8082/docker-dev/bart/ci-base-image/arm64:0.1.0
+
+ENV MAMBA_ROOT_PREFIX=/opt/conda \
+    MAMBA_EXE=/usr/bin/micromamba \
+    PATH=/opt/conda/bin:$PATH
+
+USER root
+
+RUN microdnf install -y ca-certificates tar gzip bzip2 && \
+    mkdir -p /tmp/mamba && cd /tmp/mamba && \
+    curl -L https://micromamba.snakepit.net/api/micromamba/linux-64/latest -o micromamba.tar.bz2 && \
+    tar -xvjf micromamba.tar.bz2 && \
+    mv bin/micromamba /usr/bin/micromamba && \
+    micromamba shell init -s bash -p /opt/conda && \
+    rm -rf /tmp/mamba
+
+
+RUN micromamba create -y -n base -c conda-forge python=3.11 && \
+    micromamba clean -a -y
+
+SHELL ["/bin/bash", "-c"]
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate base" >> ~/.bashrc
+
+CMD ["python", "--version"]
